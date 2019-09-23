@@ -241,6 +241,7 @@ module.exports = function(
                 authSalt: authSalt,
                 wrapWrapKb: wrapWrapKb,
                 verifierVersion: password.version,
+                keysHaveChanged: false,
               });
             })
             .then(result => {
