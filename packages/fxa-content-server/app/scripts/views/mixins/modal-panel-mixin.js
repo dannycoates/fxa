@@ -35,6 +35,57 @@ export default {
 
     this._boundBlockerClick = this.onBlockerClick.bind(this);
     $('.blocker').on('click', this._boundBlockerClick);
+
+    /**
+     * Trap keyboard focus when modal opens.
+     */
+    const modal = this.$el[0];
+    modal.setAttribute('tabindex', '1');
+
+    const focusableElementsList = 'a[href], button';
+    let focusableElements = modal.querySelectorAll(focusableElementsList);
+    focusableElements = Array.prototype.slice.call(focusableElements);
+
+    document.addEventListener('keydown', event =>
+      this.tabClick(event, focusableElements)
+    );
+  },
+
+  tabClick(event, focusableElements) {
+    function getNextSelectable(element = focusableElements[0]) {
+      console.log('getNextSelectable element', element);
+      const nextIndex = focusableElements.indexOf(element) + 1;
+      // return first element if the next element doesn't exist
+      return focusableElements[nextIndex]
+        ? focusableElements[nextIndex]
+        : focusableElements[0];
+    }
+
+    function getPreviousSelectable(
+      element = focusableElements[focusableElements.length - 1]
+    ) {
+      console.log('getPreviousSelectable element', element);
+      const previousIndex = focusableElements.indexOf(element) - 1;
+      // return last element if the previous element doesn't exist
+      return focusableElements[previousIndex]
+        ? focusableElements[previousIndex]
+        : focusableElements[focusableElements.length - 1];
+    }
+
+    //avoid IME composition keydown events
+    //ref: https://developer.mozilla.org/docs/Web/Events/keydown#Notes
+    if (event.isComposing || event.keyCode === 229) {
+      return;
+    }
+    if (event.keyCode === 9) {
+      if (event.shiftKey) {
+        event.preventDefault();
+        getPreviousSelectable(document.activeElement).focus();
+      } else {
+        event.preventDefault();
+        getNextSelectable(document.activeElement).focus();
+      }
+    }
   },
 
   /**
@@ -43,6 +94,8 @@ export default {
   closePanel() {
     if ($.modal.isActive()) {
       $.modal.close();
+      // TO DO: remove event listener
+      // document.removeEventListener('keydown', this.tabClick);
     }
   },
 
