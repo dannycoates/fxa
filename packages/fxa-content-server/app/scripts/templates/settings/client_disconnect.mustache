@@ -1,14 +1,15 @@
 <div id="client-disconnect">
   <section class="modal-panel">
     {{^hasDisconnected}}
-      <h2>{{#t}}Disconnect from Sync?{{/t}}</h2>
+      <h2>{{#t}}Disconnect from Sync{{/t}}</h2>
       <div class="error"></div>
 
-      <p class="intro">
+      <p>
       {{#t}}Your browsing data will remain on %(deviceName)s, but it will no longer sync with your account.{{/t}}
       </p>
 
       <form novalidate>
+          <h3 class="radio-header">{{#t}}You are disconnecting %(deviceName)s from Sync because this device is:{{/t}}</h3>
           <p class="disconnect-reasons fxa-radio">
             <label>
               <input type="radio" name="disconnect-reasons" value="suspicious"/>
