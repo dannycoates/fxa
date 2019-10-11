@@ -46,14 +46,13 @@ export default {
     let focusableElements = modal.querySelectorAll(focusableElementsList);
     focusableElements = Array.prototype.slice.call(focusableElements);
 
-    document.addEventListener('keydown', event =>
-      this.tabClick(event, focusableElements)
-    );
+    this._tabListener = this.tabClick.bind(null, focusableElements);
+    // this must be attached to a container of settings content and the modal
+    document.addEventListener('keydown', this._tabListener);
   },
 
-  tabClick(event, focusableElements) {
+  tabClick(focusableElements, event) {
     function getNextSelectable(element = focusableElements[0]) {
-      console.log('getNextSelectable element', element);
       const nextIndex = focusableElements.indexOf(element) + 1;
       // return first element if the next element doesn't exist
       return focusableElements[nextIndex]
@@ -64,7 +63,6 @@ export default {
     function getPreviousSelectable(
       element = focusableElements[focusableElements.length - 1]
     ) {
-      console.log('getPreviousSelectable element', element);
       const previousIndex = focusableElements.indexOf(element) - 1;
       // return last element if the previous element doesn't exist
       return focusableElements[previousIndex]
@@ -74,15 +72,12 @@ export default {
 
     //avoid IME composition keydown events
     //ref: https://developer.mozilla.org/docs/Web/Events/keydown#Notes
-    if (event.isComposing || event.keyCode === 229) {
-      return;
-    }
+    if (event.isComposing || event.keyCode === 229) return;
     if (event.keyCode === 9) {
+      event.preventDefault();
       if (event.shiftKey) {
-        event.preventDefault();
         getPreviousSelectable(document.activeElement).focus();
       } else {
-        event.preventDefault();
         getNextSelectable(document.activeElement).focus();
       }
     }
@@ -94,8 +89,6 @@ export default {
   closePanel() {
     if ($.modal.isActive()) {
       $.modal.close();
-      // TO DO: remove event listener
-      // document.removeEventListener('keydown', this.tabClick);
     }
   },
 
@@ -122,6 +115,7 @@ export default {
     this.destroy(true);
     this.trigger('modal-cancel');
     $('.blocker').off('click', this._boundBlockerClick);
+    document.removeEventListener('keydown', this._tabListener);
   },
 
   /**
