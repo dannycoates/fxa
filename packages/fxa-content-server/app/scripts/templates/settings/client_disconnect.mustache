@@ -9,7 +9,8 @@
       </p>
 
       <form novalidate>
-          <h3 class="radio-header">{{#t}}You are disconnecting %(deviceName)s from Sync because this device is:{{/t}}</h3>
+        <div role="radiogroup" aria-labelledby="radio-header">
+          <h3 id="radio-header" class="radio-header">{{#t}}You are disconnecting %(deviceName)s from Sync because this device is:{{/t}}</h3>
           <p class="disconnect-reasons fxa-radio">
             <label>
               <input type="radio" name="disconnect-reasons" value="suspicious"/>
