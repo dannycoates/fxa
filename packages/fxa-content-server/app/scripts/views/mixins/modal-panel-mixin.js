@@ -11,11 +11,9 @@
 
 import $ from 'jquery';
 import KeyCodes from '../../lib/key-codes';
-import keyCodes from '../../lib/key-codes';
 
 export default {
   isModal: true,
-
   notifications: {
     navigate: 'closePanel',
     'navigate-back': 'closePanel',
@@ -88,7 +86,7 @@ export default {
       // the form submits on 'enter' keypress by default, but if focus is on a radio button,
       // we want to select it instead
     } else if (
-      event.keyCode === keyCodes.ENTER &&
+      event.keyCode === KeyCodes.ENTER &&
       document.activeElement.getAttribute('type') === 'radio'
     ) {
       event.preventDefault();
