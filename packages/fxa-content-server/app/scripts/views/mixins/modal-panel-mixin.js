@@ -10,6 +10,8 @@
  */
 
 import $ from 'jquery';
+import KeyCodes from '../../lib/key-codes';
+import keyCodes from '../../lib/key-codes';
 
 export default {
   isModal: true,
@@ -42,16 +44,19 @@ export default {
     const modal = this.$el[0];
     modal.setAttribute('tabindex', '1');
 
-    const focusableElementsList = 'a[href], button';
-    let focusableElements = modal.querySelectorAll(focusableElementsList);
-    focusableElements = Array.prototype.slice.call(focusableElements);
+    const focusableElementsNodeList = modal.querySelectorAll(
+      'a[href], button, input[type="radio"]'
+    );
+    const focusableElements = Array.prototype.slice.call(
+      focusableElementsNodeList
+    );
 
-    this._tabListener = this.tabClick.bind(null, focusableElements);
+    this._keyDownListener = this.keyDownListener.bind(null, focusableElements);
     // this must be attached to a container of settings content and the modal
-    document.addEventListener('keydown', this._tabListener);
+    document.addEventListener('keydown', this._keyDownListener);
   },
 
-  tabClick(focusableElements, event) {
+  keyDownListener(focusableElements, event) {
     function getNextSelectable(element = focusableElements[0]) {
       const nextIndex = focusableElements.indexOf(element) + 1;
       // return first element if the next element doesn't exist
@@ -73,13 +78,21 @@ export default {
     //avoid IME composition keydown events
     //ref: https://developer.mozilla.org/docs/Web/Events/keydown#Notes
     if (event.isComposing || event.keyCode === 229) return;
-    if (event.keyCode === 9) {
+    if (event.keyCode === KeyCodes.TAB) {
       event.preventDefault();
       if (event.shiftKey) {
         getPreviousSelectable(document.activeElement).focus();
       } else {
         getNextSelectable(document.activeElement).focus();
       }
+      // the form submits on 'enter' keypress by default, but if focus is on a radio button,
+      // we want to select it instead
+    } else if (
+      event.keyCode === keyCodes.ENTER &&
+      document.activeElement.getAttribute('type') === 'radio'
+    ) {
+      event.preventDefault();
+      document.activeElement.checked = true;
     }
   },
 
@@ -115,7 +128,7 @@ export default {
     this.destroy(true);
     this.trigger('modal-cancel');
     $('.blocker').off('click', this._boundBlockerClick);
-    document.removeEventListener('keydown', this._tabListener);
+    document.removeEventListener('keydown', this._keyDownListener);
   },
 
   /**
