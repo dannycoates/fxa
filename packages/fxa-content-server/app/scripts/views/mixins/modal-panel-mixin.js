@@ -18,6 +18,9 @@ export default {
     navigate: 'closePanel',
     'navigate-back': 'closePanel',
   },
+  events: {
+    keydown: 'keyDownListener',
+  },
 
   /**
    * Open the panel.
@@ -41,6 +44,7 @@ export default {
      */
     const modal = this.$el[0];
     modal.setAttribute('tabindex', '1');
+    modal.focus();
 
     const focusableElementsNodeList = modal.querySelectorAll(
       'a[href], button, input[type="radio"]'
@@ -50,8 +54,7 @@ export default {
     );
 
     this._keyDownListener = this.keyDownListener.bind(null, focusableElements);
-    // this must be attached to a container of settings content and the modal
-    document.addEventListener('keydown', this._keyDownListener);
+    modal.addEventListener('keydown', this._keyDownListener);
   },
 
   keyDownListener(focusableElements, event) {
@@ -126,7 +129,6 @@ export default {
     this.destroy(true);
     this.trigger('modal-cancel');
     $('.blocker').off('click', this._boundBlockerClick);
-    document.removeEventListener('keydown', this._keyDownListener);
   },
 
   /**
