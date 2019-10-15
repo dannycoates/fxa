@@ -36,6 +36,7 @@ export default {
 
     this.$el.on($.modal.AFTER_CLOSE, () => this.onAfterClose());
 
+    this._previousActiveElement = document.activeElement;
     this._boundBlockerClick = this.onBlockerClick.bind(this);
     $('.blocker').on('click', this._boundBlockerClick);
 
@@ -47,7 +48,7 @@ export default {
     modal.focus();
 
     const focusableElementsNodeList = modal.querySelectorAll(
-      'a[href], button, input[type="radio"]'
+      '#file, #camera, button, input[type="radio"]'
     );
     const focusableElements = Array.prototype.slice.call(
       focusableElementsNodeList
@@ -129,6 +130,7 @@ export default {
     this.destroy(true);
     this.trigger('modal-cancel');
     $('.blocker').off('click', this._boundBlockerClick);
+    this._previousActiveElement.focus();
   },
 
   /**
