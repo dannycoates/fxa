@@ -48,7 +48,7 @@ export default {
     modal.focus();
 
     const focusableElementsNodeList = modal.querySelectorAll(
-      '#file, #camera, button, input[type="radio"]'
+      'a[href] button, input[type="radio"]'
     );
     const focusableElements = Array.prototype.slice.call(
       focusableElementsNodeList
@@ -79,7 +79,9 @@ export default {
 
     //avoid IME composition keydown events
     //ref: https://developer.mozilla.org/docs/Web/Events/keydown#Notes
-    if (event.isComposing || event.keyCode === 229) return;
+    if (event.isComposing || event.keyCode === KeyCodes.IME) {
+      return;
+    }
     if (event.keyCode === KeyCodes.TAB) {
       event.preventDefault();
       if (event.shiftKey) {
@@ -87,11 +89,12 @@ export default {
       } else {
         getNextSelectable(document.activeElement).focus();
       }
-      // the form submits on 'enter' keypress by default, but if focus is on a radio button,
-      // we want to select it instead
+      // the form submits on 'enter' keypress by default, but if focus is on an
+      // unselected radio button, we want to select it instead
     } else if (
       event.keyCode === KeyCodes.ENTER &&
-      document.activeElement.getAttribute('type') === 'radio'
+      document.activeElement.getAttribute('type') === 'radio' &&
+      document.activeElement.checked === false
     ) {
       event.preventDefault();
       document.activeElement.checked = true;
