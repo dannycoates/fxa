@@ -1,5 +1,52 @@
 # Change history
 
+## 1.148.8
+
+### Bug fixes
+
+- deps: Update deps and add exception for advisory 1184 (f4d7e9855)
+
+## 1.148.7
+
+No changes.
+
+## 1.148.6
+
+No changes.
+
+## 1.148.5
+
+No changes.
+
+## 1.148.4
+
+No changes.
+
+## 1.148.3
+
+No changes.
+
+## 1.148.2
+
+### Other changes
+
+- release: Merge branch 'train-147' into train-148-merge-147 (66e170d45)
+
+## 1.148.1
+
+No changes.
+
+## 1.148.0
+
+### New features
+
+- add queue prefix config and fix login validation (1e00dc4ab)
+- add vscode tasks for running tests and debugger (dac5e8b98)
+
+## 1.147.5
+
+No changes.
+
 ## 1.147.4
 
 No changes.

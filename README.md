@@ -299,7 +299,7 @@ npm install maildev -g
 
 ```bash
 ./pm2 start servers.json
-./pm2 stop 0
+./pm2 stop 'auth-server local mail helper'
 ```
 
 Once services have started, you can start MailDev on port 9999. You might have to start MailDev with sudo permissions.

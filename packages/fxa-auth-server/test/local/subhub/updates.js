@@ -8,7 +8,7 @@ const sinon = require('sinon');
 const assert = { ...sinon.assert, ...require('chai').assert };
 
 const EventEmitter = require('events').EventEmitter;
-const { mockDB, mockLog } = require('../../mocks');
+const { mockDB, mockLog, mockProfile } = require('../../mocks');
 const subhubUpdates = require('../../../lib/subhub/updates');
 
 const mockDeliveryQueue = new EventEmitter();
@@ -17,7 +17,7 @@ mockDeliveryQueue.start = function start() {};
 const baseMessage = {
   uid: '1e2122ba',
   subscriptionId: '1234',
-  productName: 'fx_pro',
+  productId: 'fx_pro',
   eventId: 'st_ev_1234',
   eventCreatedAt: 1557265730749,
   messageCreatedAt: 1557265730949,
@@ -29,14 +29,16 @@ function mockMessage(messageOverrides) {
   return message;
 }
 
-function mockSubHubUpdates(log, config, db) {
-  return subhubUpdates(log, config)(mockDeliveryQueue, db);
+function mockSubHubUpdates(log, config, db, profile) {
+  const updateProcessor = new subhubUpdates(log, config, db, profile);
+  return updateProcessor;
 }
 
 describe('subhub updates', () => {
   let config;
   let db;
   let log;
+  let profile;
 
   beforeEach(() => {
     config = {
@@ -52,10 +54,11 @@ describe('subhub updates', () => {
       uid: baseMessage.uid,
     });
     log = mockLog();
+    profile = mockProfile();
   });
 
   it('should log validation errors', async () => {
-    await mockSubHubUpdates(log, config, db).handleSubHubUpdates(
+    await mockSubHubUpdates(log, config, db, profile).handleSubHubUpdates(
       mockMessage({ subscriptionId: null, active: true })
     );
     assert.equal(log.error.callCount, 1);
@@ -66,7 +69,7 @@ describe('subhub updates', () => {
   });
 
   it('should activate an account', async () => {
-    await mockSubHubUpdates(log, config, db).handleSubHubUpdates(
+    await mockSubHubUpdates(log, config, db, profile).handleSubHubUpdates(
       mockMessage({ active: true })
     );
     // FIXME: figure out what side effect we expect
@@ -80,8 +83,8 @@ describe('subhub updates', () => {
     assert.calledWithExactly(db.createAccountSubscription, {
       uid: baseMessage.uid,
       subscriptionId: baseMessage.subscriptionId,
-      productId: baseMessage.productName,
-      createdAt: baseMessage.eventCreatedAt,
+      productId: baseMessage.productId,
+      createdAt: baseMessage.eventCreatedAt * 1000,
     });
 
     assert.equal(log.notifyAttachedServices.callCount, 1);
@@ -96,7 +99,7 @@ describe('subhub updates', () => {
       uid: baseMessage.uid,
       subscriptionId: baseMessage.subscriptionId,
       isActive: true,
-      productId: baseMessage.productName,
+      productId: baseMessage.productId,
       productCapabilities: ['foo', 'bar'],
     });
   });
@@ -110,11 +113,13 @@ describe('subhub updates', () => {
       return {
         uid,
         subscriptionId,
-        productId: message.productName,
+        productId: message.productId,
         createdAt: message.eventCreatedAt - 10000,
       };
     });
-    await mockSubHubUpdates(log, config, db).handleSubHubUpdates(message);
+    await mockSubHubUpdates(log, config, db, profile).handleSubHubUpdates(
+      message
+    );
     assert.equal(
       db.getAccountSubscription.callCount,
       1,
@@ -128,10 +133,21 @@ describe('subhub updates', () => {
   });
 
   it('should de-activate an account', async () => {
-    await mockSubHubUpdates(log, config, db).handleSubHubUpdates(
-      mockMessage({ active: false })
+    const message = mockMessage({
+      eventCreatedAt: baseMessage.eventCreatedAt,
+      active: false,
+    });
+    db.getAccountSubscription = sinon.spy(async (uid, subscriptionId) => {
+      return {
+        uid,
+        subscriptionId,
+        productId: message.productId,
+        createdAt: message.eventCreatedAt,
+      };
+    });
+    await mockSubHubUpdates(log, config, db, profile).handleSubHubUpdates(
+      message
     );
-    // FIXME: figure out what side effect we expect
     assert.calledWithExactly(
       db.deleteAccountSubscription,
       baseMessage.uid,
@@ -151,7 +167,7 @@ describe('subhub updates', () => {
       uid: baseMessage.uid,
       subscriptionId: baseMessage.subscriptionId,
       isActive: false,
-      productId: baseMessage.productName,
+      productId: baseMessage.productId,
       productCapabilities: ['foo', 'bar'],
     });
   });
@@ -165,12 +181,14 @@ describe('subhub updates', () => {
       return {
         uid,
         subscriptionId,
-        productId: message.productName,
+        productId: message.productId,
         // It's a subscription FROM THE FUTURE!
-        createdAt: message.eventCreatedAt + 1000,
+        createdAt: message.eventCreatedAt * 1000 + 1000,
       };
     });
-    await mockSubHubUpdates(log, config, db).handleSubHubUpdates(message);
+    await mockSubHubUpdates(log, config, db, profile).handleSubHubUpdates(
+      message
+    );
     assert.equal(
       db.getAccountSubscription.callCount,
       1,
@@ -194,12 +212,14 @@ describe('subhub updates', () => {
       return {
         uid,
         subscriptionId,
-        productId: message.productName,
+        productId: message.productId,
         // It's a subscription FROM THE FUTURE!
         createdAt: message.eventCreatedAt + 1000,
       };
     });
-    await mockSubHubUpdates(log, config, db).handleSubHubUpdates(message);
+    await mockSubHubUpdates(log, config, db, profile).handleSubHubUpdates(
+      message
+    );
     assert.equal(
       db.getAccountSubscription.callCount,
       1,

@@ -107,7 +107,7 @@ module.exports = {
   CONFIRM_SIGNUP_CODE: {
     HEADER: '#fxa-confirm-signup-code-header',
     EMAIL_FIELD: '.verification-email-message',
-    INPUT: '.token-code',
+    INPUT: '.otp-code',
     LINK_BACK: '#back',
   },
   CONNECT_ANOTHER_DEVICE: {
@@ -158,6 +158,7 @@ module.exports = {
     SUB_HEADER: '#fxa-enter-email-header .service',
     SUBMIT: 'button[type="submit"]',
     TOOLTIP: 'input[type=email] + .tooltip',
+    TOOLTIP_BOUNCED_EMAIL: 'input[type=email] + .tooltip',
   },
   FORCE_AUTH: {
     EMAIL: 'input[type=email]',
@@ -230,7 +231,9 @@ module.exports = {
   },
   SETTINGS_CLIENTS: {
     BUTTON_REFRESH: '.clients-refresh',
+    BUTTON_REFRESH_LOADING: '.clients-refresh .spinner',
     CLIENT_LIST: '.client-list',
+    OAUTH_CLIENT: 'li.client-oAuthApp',
     REFRESHING: '.clients-refresh.disabled',
   },
   SETTINGS_COMMUNICATION: {
@@ -299,7 +302,7 @@ module.exports = {
     EMAIL_FIELD: '.verification-email-message',
     ERROR: '.error',
     HEADER: '#fxa-signin-code-header',
-    INPUT: '.token-code',
+    INPUT: '.otp-code',
     RESEND: '#resend',
     SUCCESS: '.success',
     SUBMIT: 'button[type="submit"]',

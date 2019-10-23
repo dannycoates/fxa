@@ -1,4 +1,10 @@
-import React, { useEffect, useContext, useCallback, useState } from 'react';
+import React, {
+  useEffect,
+  useContext,
+  useCallback,
+  useState,
+  useRef,
+} from 'react';
 import { connect } from 'react-redux';
 import dayjs from 'dayjs';
 
@@ -8,6 +14,12 @@ import {
   resetUpdatePayment,
   resetCancelSubscription,
   resetReactivateSubscription,
+  manageSubscriptionsMounted,
+  manageSubscriptionsEngaged,
+  cancelSubscriptionMounted,
+  cancelSubscriptionEngaged,
+  updatePaymentMounted,
+  updatePaymentEngaged,
 } from '../../store/actions';
 
 import {
@@ -45,6 +57,7 @@ import {
 } from '../../store/types';
 
 import './index.scss';
+import fpnImage from '../../images/fpn';
 
 import AlertBar from '../../components/AlertBar';
 import DialogMessage from '../../components/DialogMessage';
@@ -68,6 +81,12 @@ export type SubscriptionsProps = {
   updatePayment: Function;
   updatePaymentStatus: UpdatePaymentFetchState;
   resetUpdatePayment: Function;
+  manageSubscriptionsMounted: Function;
+  manageSubscriptionsEngaged: Function;
+  cancelSubscriptionMounted: Function;
+  cancelSubscriptionEngaged: Function;
+  updatePaymentMounted: Function;
+  updatePaymentEngaged: Function;
 };
 export const Subscriptions = ({
   profile,
@@ -85,6 +104,12 @@ export const Subscriptions = ({
   resetUpdatePayment,
   resetCancelSubscription,
   updatePaymentStatus,
+  manageSubscriptionsMounted,
+  manageSubscriptionsEngaged,
+  cancelSubscriptionMounted,
+  cancelSubscriptionEngaged,
+  updatePaymentMounted,
+  updatePaymentEngaged,
 }: SubscriptionsProps) => {
   const { config, locationReload, navigateToUrl } = useContext(AppContext);
 
@@ -94,6 +119,27 @@ export const Subscriptions = ({
     [setShowPaymentSuccessAlert]
   );
   const SUPPORT_FORM_URL = `${config.servers.content.url}/support`;
+
+  const engaged = useRef(false);
+
+  useEffect(() => {
+    manageSubscriptionsMounted();
+  }, [manageSubscriptionsMounted]);
+
+  // Any button click is engagement
+  const onAnyClick = useCallback(
+    (evt: any) => {
+      if (
+        !engaged.current &&
+        (evt.target.tagName === 'BUTTON' ||
+          evt.target.parentNode.tagName === 'BUTTON')
+      ) {
+        manageSubscriptionsEngaged();
+        engaged.current = true;
+      }
+    },
+    [manageSubscriptionsEngaged, engaged]
+  );
 
   // Fetch subscriptions and customer on initial render or auth change.
   useEffect(() => {
@@ -159,7 +205,7 @@ export const Subscriptions = ({
   }
 
   return (
-    <div className="subscription-management">
+    <div className="subscription-management" onClick={onAnyClick}>
       {cancelSubscriptionStatus.result !== null && (
         <CancellationDialogMessage
           {...{
@@ -212,6 +258,25 @@ export const Subscriptions = ({
         </DialogMessage>
       )}
 
+      {reactivateSubscriptionStatus.result && (
+        <DialogMessage onDismiss={resetReactivateSubscription}>
+          <img alt="Firefox Private Network" src={fpnImage} />
+          <p
+            data-testid="reactivate-subscription-success"
+            className="reactivate-subscription-success"
+          >
+            Thanks! You're all set.
+          </p>
+          <button
+            className="settings-button"
+            onClick={() => resetReactivateSubscription()}
+            data-testid="reactivate-subscription-success-button"
+          >
+            Close
+          </button>
+        </DialogMessage>
+      )}
+
       {cancelSubscriptionStatus.error && (
         <DialogMessage
           className="dialog-error"
@@ -235,7 +300,7 @@ export const Subscriptions = ({
               </header>
               <button
                 data-testid="contact-support-button"
-                className="settings-button secondary-button settings-unit-toggle"
+                className="settings-button primary-button settings-unit-toggle"
                 onClick={onSupportClick}
               >
                 <span className="change-button">Contact Support</span>
@@ -272,6 +337,11 @@ export const Subscriptions = ({
                 cancelSubscription,
                 reactivateSubscription,
                 customerSubscription,
+                cancelSubscriptionMounted,
+                cancelSubscriptionEngaged,
+                cancelSubscriptionStatus,
+                updatePaymentMounted,
+                updatePaymentEngaged,
                 plan: planForId(customerSubscription.plan_id, plans),
                 subscription: subscriptionForId(
                   customerSubscription.subscription_id,
@@ -340,8 +410,9 @@ const CancellationDialogMessage = ({
         We're sorry to see you go
       </h4>
       <p>
-        Your {plan.plan_name} subscription has been cancelled. You will still
-        have until access to {plan.plan_name} until {periodEndDate}.
+        Your {plan.product_name} subscription has been cancelled.
+        <br />
+        You will still have access to {plan.product_name} until {periodEndDate}.
       </p>
       <p className="small">
         Have questions? Visit <a href={supportFormUrl}>Mozilla Support</a>.
@@ -358,12 +429,12 @@ const ProfileBanner = ({
   profile: { email, avatar, displayName },
 }: ProfileProps) => (
   <header id="fxa-settings-profile-header-wrapper">
-    <div className="avatar-wrapper avatar-settings-view">
+    <div className="avatar-wrapper avatar-settings-view nohover">
       <img src={avatar} alt={displayName || email} className="profile-image" />
     </div>
     <div id="fxa-settings-profile-header">
-      {displayName && <h1 className="card-header">{displayName}</h1>}
-      <h2 className="card-subheader">{email}</h2>
+      <h1 className="card-header">{displayName ? displayName : email}</h1>
+      {displayName && <h2 className="card-subheader">{email}</h2>}
     </div>
   </header>
 );
@@ -388,5 +459,11 @@ export default connect(
     resetCancelSubscription,
     reactivateSubscription: reactivateSubscriptionAndRefresh,
     resetReactivateSubscription,
+    manageSubscriptionsMounted,
+    manageSubscriptionsEngaged,
+    cancelSubscriptionMounted,
+    cancelSubscriptionEngaged,
+    updatePaymentMounted,
+    updatePaymentEngaged,
   }
 )(Subscriptions);

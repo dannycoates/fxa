@@ -1,3 +1,47 @@
+## 1.148.8
+
+No changes.
+
+## 1.148.7
+
+No changes.
+
+## 1.148.6
+
+No changes.
+
+## 1.148.5
+
+No changes.
+
+## 1.148.4
+
+No changes.
+
+## 1.148.3
+
+No changes.
+
+## 1.148.2
+
+### Other changes
+
+- release: Merge branch 'train-147' into train-148-merge-147 (66e170d45)
+
+## 1.148.1
+
+No changes.
+
+## 1.148.0
+
+### New features
+
+- auth-server: invalidate per-profile cache on subscription changes (c65b89557)
+
+## 1.147.5
+
+No changes.
+
 ## 1.147.4
 
 No changes.

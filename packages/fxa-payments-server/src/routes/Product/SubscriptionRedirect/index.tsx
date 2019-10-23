@@ -2,6 +2,7 @@ import React, { useEffect, useContext } from 'react';
 import { Plan } from '../../../store/types';
 import { AppContext } from '../../../lib/AppContext';
 
+import fpnImage from '../../../images/fpn';
 import './index.scss';
 
 const defaultProductRedirectURL = 'https://mozilla.org';
@@ -11,7 +12,7 @@ export type SubscriptionRedirectProps = {
 };
 
 export const SubscriptionRedirect = ({
-  plan: { product_id, plan_name },
+  plan: { product_id, product_name },
 }: SubscriptionRedirectProps) => {
   const {
     config: { productRedirectURLs },
@@ -28,10 +29,10 @@ export const SubscriptionRedirect = ({
   return (
     <div className="subscription-ready">
       <h2>Your subscription is ready</h2>
-      <div className="graphic graphic-fpn"></div>
+      <img alt="Firefox Private Network" src={fpnImage} />
       <p>
         Hang on for a moment while we send you to the{' '}
-        <span className="plan-name">{plan_name}</span> download page.
+        <span className="plan-name">{product_name}</span> download page.
       </p>
       <a href={redirectUrl}>
         Click here if you're not automatically redirected

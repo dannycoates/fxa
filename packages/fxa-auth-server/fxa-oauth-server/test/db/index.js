@@ -81,7 +81,7 @@ describe('db', function() {
 
     it('2-byte encoding preserved', makeTest(randomString(8), 'Düsseldorf'));
     it('3-byte encoding preserved', makeTest(randomString(8), '北京')); // Beijing
-    it('4-byte encoding throws with mysql; ok with memdb', function() {
+    it('4-byte encoding throws with mysql', function() {
       var data = {
         id: randomString(8),
         // 'MUSICAL SYMBOL F CLEF' (U+1D122) (JS: '\uD834\uDD22', UTF8: '0xF0 0x9D 0x84 0xA2')
@@ -96,30 +96,18 @@ describe('db', function() {
       return db
         .registerClient(data)
         .then(function(c) {
-          if (config.get('db.driver') === 'memory') {
-            assert.ok(c.name === data.name, '4-byte UTF8 works with memory db');
-          } else {
-            assert.fail('This should not have succeeded.');
-          }
+          assert.fail('This should not have succeeded.');
         })
         .catch(function(err) {
-          if (config.get('db.driver') === 'memory') {
-            assert.fail('This should not have failed.');
-          } else {
-            assert.ok(err);
-            assert.equal(err.code, 'ER_TRUNCATED_WRONG_VALUE_FOR_FIELD');
-            assert.equal(err.errno, 1366);
-          }
+          assert.ok(err);
+          assert.equal(err.code, 'ER_TRUNCATED_WRONG_VALUE_FOR_FIELD');
+          assert.equal(err.errno, 1366);
         });
     });
   });
 
   describe('getEncodingInfo', function() {
     it('should use utf8', function() {
-      if (config.get('db.driver') === 'memory') {
-        return assert.ok('getEncodingInfo has no meaning with memory impl');
-      }
-
       return db.getEncodingInfo().then(function(info) {
         assert.equal(info['character_set_connection'], 'utf8mb4');
         assert.equal(info['character_set_database'], 'utf8');
@@ -633,6 +621,61 @@ describe('db', function() {
         assert.ok('acquired' in result);
         assert.ok(result.acquired === 1);
       });
+    });
+  });
+
+  describe('deleteClientRefreshToken', () => {
+    it('revokes the refresh token and any access tokens for the client_id, uid pair', async () => {
+      const clientId = randomString(8);
+      const userId = randomString(16);
+      const email = 'a@b' + randomString(16) + ' + .c';
+      const scope = ['no_scope'];
+
+      await db.registerClient({
+        id: clientId,
+        name: 'deleteClientRefreshTokenTest',
+        hashedSecret: randomString(32),
+        imageUri: 'https://example.domain/logo',
+        redirectUri: 'https://example.domain/return?foo=bar',
+        trusted: true,
+        canGrant: false,
+        publicClient: false,
+      });
+      const accessToken = await db.generateAccessToken({
+        clientId: buf(clientId),
+        userId: buf(userId),
+        email,
+        scope,
+      });
+      const refreshToken = await db.generateRefreshToken({
+        clientId: buf(clientId),
+        userId: buf(userId),
+        email,
+        scope,
+      });
+      const refreshTokenIdHash = encrypt.hash(
+        refreshToken.token.toString('hex')
+      );
+
+      const wasRevoked = await db.deleteClientRefreshToken(
+        hex(refreshTokenIdHash),
+        clientId,
+        userId
+      );
+      assert.isTrue(wasRevoked);
+
+      assert.notOk(await db.getRefreshToken(refreshTokenIdHash));
+
+      // all access tokens for the client_id, uid should be revoked as well
+      // as the refresh token. Clients that do the right thing will use
+      // active refresh tokens to get new access tokens for the ones that
+      // have been revoked. Deleting all the access tokens is to prevent
+      // ghost access tokens from appearing in the user's devices & apps list.
+      // See:
+      //  - https://github.com/mozilla/fxa/issues/1249
+      //  - https://github.com/mozilla/fxa/issues/3017
+      const tokenIdHash = hex(encrypt.hash(accessToken.token.toString('hex')));
+      assert.notOk(await db.getAccessToken(tokenIdHash));
     });
   });
 });

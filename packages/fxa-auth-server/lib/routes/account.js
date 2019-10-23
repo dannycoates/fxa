@@ -1173,70 +1173,43 @@ module.exports = (
             });
         }
 
-        function resetAccountData() {
-          let authSalt;
-          return random
-            .hex(32)
-            .then(hex => {
-              authSalt = hex;
-              password = new Password(authPW, authSalt, config.verifierVersion);
-              return password.verifyHash();
-            })
-            .then(verifyHashData => {
-              verifyHash = verifyHashData;
-
-              return setupKb();
-            })
-            .then(() => {
-              return db.resetAccount(accountResetToken, {
-                authSalt,
-                verifyHash,
-                wrapWrapKb,
-                verifierVersion: password.version,
-              });
-            })
-            .then(() => {
-              // Delete all passwordChangeTokens, passwordForgotTokens and
-              // accountResetTokens associated with this uid
-              return db.resetAccountTokens(accountResetToken.uid);
-            })
-            .then(() => {
-              // Notify the devices that the account has changed.
-              request.app.devices.then(devices =>
-                push.notifyPasswordReset(accountResetToken.uid, devices)
-              );
-
-              return db
-                .account(accountResetToken.uid)
-                .then(accountData => (account = accountData));
-            })
-            .then(() => {
-              return P.all([
-                request.emitMetricsEvent('account.reset', {
-                  uid: account.uid,
-                }),
-                log.notifyAttachedServices('reset', request, {
-                  uid: account.uid,
-                  generation: account.verifierSetAt,
-                }),
-                customs.reset(account.email),
-              ]);
-            });
-        }
-
-        function setupKb() {
+        async function resetAccountData() {
+          const authSalt = await random.hex(32);
+          password = new Password(authPW, authSalt, config.verifierVersion);
+          verifyHash = await password.verifyHash();
           if (recoveryKeyId) {
             // We have the previous kB, just re-wrap it with the new password.
-            return password.wrap(wrapKb).then(result => (wrapWrapKb = result));
+            wrapWrapKb = await password.wrap(wrapKb);
           } else {
             // We need to regenerate kB and wrap it with the new password.
-            return random.hex(32).then(result => {
-              wrapWrapKb = result;
-              return password
-                .unwrap(wrapWrapKb)
-                .then(result => (wrapKb = result));
-            });
+            wrapWrapKb = await random.hex(32);
+            wrapKb = await password.unwrap(wrapWrapKb);
           }
+          // db.resetAccount() deletes all the devices saved in the account,
+          // so grab the list to notify before we call it.
+          const devicesToNotify = await request.app.devices;
+          // Reset the account, and delete any other outstanding account-related tokens.
+          await db.resetAccount(accountResetToken, {
+            authSalt,
+            verifyHash,
+            wrapWrapKb,
+            verifierVersion: password.version,
+          });
+          await db.resetAccountTokens(accountResetToken.uid);
+          // Notify various interested parties about this password reset.
+          // These can all safely happen in parallel.
+          account = await db.account(accountResetToken.uid);
+          await P.all([
+            push.notifyPasswordReset(account.uid, devicesToNotify),
+            request.emitMetricsEvent('account.reset', {
+              uid: account.uid,
+            }),
+            log.notifyAttachedServices('reset', request, {
+              uid: account.uid,
+              generation: account.verifierSetAt,
+            }),
+            customs.reset(account.email),
+          ]);
         }
 
         function recoveryKeyDeleteAndEmailNotification() {
@@ -1463,7 +1436,18 @@ module.exports = (
         const { uid } = emailRecord;
 
         if (config.subscriptions && config.subscriptions.enabled) {
-          await subhub.deleteCustomer(uid);
+          try {
+            await subhub.deleteCustomer(uid);
+          } catch (err) {
+            if (err.message === 'Customer not available') {
+              // if subhub didn't know about the customer, no problem.
+              // This should not stop the user from deleting their account.
+              // See https://github.com/mozilla/fxa/issues/2900
+              // https://github.com/mozilla/fxa/issues/2896
+            } else {
+              throw err;
+            }
+          }
         }
 
         // We fetch the devices to notify before deleteAccount()

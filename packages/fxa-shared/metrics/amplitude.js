@@ -104,6 +104,12 @@ function mapDisconnectReason(eventType, eventCategory) {
 module.exports = {
   EVENT_PROPERTIES,
   GROUPS,
+  mapBrowser,
+  mapFormFactor,
+  mapLocation,
+  mapOs,
+  mapUserAgentProperties,
+  toSnakeCase,
 
   /**
    * Initialize an amplitude event mapper. You can read more about the amplitude
@@ -235,8 +241,10 @@ module.exports = {
         pruneUnsetValues({
           service: serviceName,
           oauth_client_id: clientId,
-          plan_id: data.plan_id,
-          product_id: data.product_id,
+          // TODO: Delete data.plan_id and data.product_id after the camel-cased
+          //       equivalents have been in place for at least one train.
+          plan_id: data.planId || data.plan_id,
+          product_id: data.productId || data.product_id,
         }),
         EVENT_PROPERTIES[eventGroup](
           eventType,
@@ -392,5 +400,45 @@ function mapNewsletters(data) {
       return toSnakeCase(newsletter);
     });
     return { newsletters };
+  }
+}
+
+function mapBrowser(userAgent) {
+  return mapUserAgentProperties(userAgent, 'ua', 'browser', 'browserVersion');
+}
+
+function mapOs(userAgent) {
+  return mapUserAgentProperties(userAgent, 'os', 'os', 'osVersion');
+}
+
+function mapUserAgentProperties(
+  userAgent,
+  key,
+  familyProperty,
+  versionProperty
+) {
+  const group = userAgent[key];
+  const { family } = group;
+  if (family && family !== 'Other') {
+    return {
+      [familyProperty]: family,
+      [versionProperty]: group.toVersionString(),
+    };
+  }
+}
+
+function mapFormFactor(userAgent) {
+  const { brand, family: formFactor } = userAgent.device;
+  if (brand && formFactor && brand !== 'Generic') {
+    return { formFactor };
+  }
+}
+
+function mapLocation(location) {
+  if (location && (location.country || location.state)) {
+    return {
+      country: location.country,
+      region: location.state,
+    };
   }
 }

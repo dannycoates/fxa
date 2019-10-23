@@ -10,6 +10,7 @@ module.exports = () => {
 
   // setup version first for the rest of the modules
   const logger = require('./logging/log')('server.main');
+  const routes = require('./routes');
   const version = require('./version');
   const config = require('../config');
 
@@ -26,6 +27,7 @@ module.exports = () => {
   const csp = require('../lib/csp');
   const cspRulesBlocking = require('../lib/csp/blocking')(config);
   const cspRulesReportOnly = require('../lib/csp/report-only')(config);
+  const { cors, routing } = require('../../../fxa-shared/express')();
 
   const app = express();
 
@@ -124,21 +126,23 @@ module.exports = () => {
       origin: config.get('listen.publicUrl'),
     };
 
-    app
-      .route(/\.(js|css|woff|woff2|eot|ttf)$/)
-      .get(require('cors')(corsOptions));
+    app.route(/\.(js|css|woff|woff2|eot|ttf)$/).get(cors(corsOptions));
   }
 
-  function injectHtmlConfig(html, config, featureFlags) {
-    const encodedConfig = encodeURIComponent(JSON.stringify(config));
-    let result = html.replace('__SERVER_CONFIG__', encodedConfig);
-    const encodedFeatureFlags = encodeURIComponent(
-      JSON.stringify(featureFlags)
-    );
-    result = result.replace('__FEATURE_FLAGS__', encodedFeatureFlags);
-    return result;
-  }
+  const routeHelpers = routing(app, logger);
+  routes.forEach(routeHelpers.addRoute);
 
+  app.get('/__lbheartbeat__', (req, res) => {
+    res.type('txt').send('Ok');
+  });
+
+  app.get('/__version__', (req, res) => {
+    res.type('application/json').send(JSON.stringify(version));
+  });
+
+  // Note - the static route handlers must come last
+  // because the proxyUrl handler's app.use('/') captures
+  // all requests that match no others.
   const proxyUrl = config.get('proxyStaticResourcesFrom');
   if (proxyUrl) {
     logger.info('static.proxying', { url: proxyUrl });
@@ -190,6 +194,7 @@ module.exports = () => {
         res.send(renderedStaticHtml);
       });
     });
+
     app.use(
       serveStatic(STATIC_DIRECTORY, {
         maxAge: config.get('staticResources.maxAge'),
@@ -197,19 +202,32 @@ module.exports = () => {
     );
   }
 
-  app.get('/__lbheartbeat__', (req, res) => {
-    res.type('txt').send('Ok');
-  });
-
-  app.get('/__version__', (req, res) => {
-    res.type('application/json').send(JSON.stringify(version));
-  });
-
   // it's a four-oh-four not found.
   app.use(require('./404'));
 
+  app.use(routeHelpers.validationErrorHandler);
+
   if (sentryDsn) {
     app.use(sentry.Handlers.errorHandler());
+  }
+
+  return {
+    listen,
+    app, // for testing
+  };
+
+  function isCorsRequired() {
+    return config.get('staticResources.url') !== config.get('listen.publicUrl');
+  }
+
+  function injectHtmlConfig(html, config, featureFlags) {
+    const encodedConfig = encodeURIComponent(JSON.stringify(config));
+    let result = html.replace('__SERVER_CONFIG__', encodedConfig);
+    const encodedFeatureFlags = encodeURIComponent(
+      JSON.stringify(featureFlags)
+    );
+    result = result.replace('__FEATURE_FLAGS__', encodedFeatureFlags);
+    return result;
   }
 
   function listen() {
@@ -224,14 +242,5 @@ module.exports = () => {
 
       logger.info('server.started', { port });
     });
-  }
-
-  return {
-    listen,
-    app, // for testing
-  };
-
-  function isCorsRequired() {
-    return config.get('staticResources.url') !== config.get('listen.publicUrl');
   }
 };

@@ -6,6 +6,7 @@ import { Omit } from '../../lib/types';
 
 import {
   mockStripeElementOnChangeFns,
+  mockStripeElementOnBlurFns,
   elementChangeResponse,
 } from '../../lib/test-utils';
 
@@ -44,13 +45,20 @@ afterEach(cleanup);
 
 // Redefine onPayment and onPaymentError as optional so we can supply mock
 // functions by default in Subject.
-type SubjectProps = Omit<PaymentFormProps, 'onPayment' | 'onPaymentError'> & {
+type SubjectProps = Omit<
+  PaymentFormProps,
+  'onPayment' | 'onPaymentError' | 'onMounted' | 'onEngaged'
+> & {
   onPayment?: (tokenResponse: stripe.TokenResponse, name: string) => void;
   onPaymentError?: (error: any) => void;
+  onMounted?: () => void;
+  onEngaged?: () => void;
 };
 const Subject = ({
   onPayment = jest.fn(),
   onPaymentError = jest.fn(),
+  onMounted = jest.fn(),
+  onEngaged = jest.fn(),
   ...props
 }: SubjectProps) => {
   return (
@@ -58,6 +66,8 @@ const Subject = ({
       {...{
         onPayment,
         onPaymentError,
+        onMounted,
+        onEngaged,
         ...props,
       }}
     />
@@ -94,7 +104,10 @@ it('renders error tooltips for invalid stripe elements', () => {
   act(() => {
     for (const [testid, errorMessage] of Object.entries(mockErrors)) {
       mockStripeElementOnChangeFns[testid](
-        elementChangeResponse({ errorMessage })
+        elementChangeResponse({ errorMessage, value: 'foo' })
+      );
+      mockStripeElementOnBlurFns[testid](
+        elementChangeResponse({ errorMessage, value: 'foo' })
       );
     }
   });
@@ -102,7 +115,7 @@ it('renders error tooltips for invalid stripe elements', () => {
   for (const [testid, expectedMessage] of Object.entries(mockErrors)) {
     const el = getByTestId(testid);
     const tooltipEl = (el.parentNode as ParentNode).querySelector('.tooltip');
-    expect(tooltipEl).toBeDefined();
+    expect(tooltipEl).not.toBeNull();
     expect((tooltipEl as Node).textContent).toEqual(expectedMessage);
   }
 });
@@ -137,6 +150,16 @@ const renderWithValidFields = (props?: SubjectProps) => {
 it('enables submit button when all fields are valid', () => {
   let { getByTestId } = renderWithValidFields();
   expect(getByTestId('submit')).not.toHaveAttribute('disabled');
+});
+
+it('calls onMounted and onEngaged', () => {
+  const onMounted = jest.fn();
+  const onEngaged = jest.fn();
+
+  renderWithValidFields({ onMounted, onEngaged });
+
+  expect(onMounted).toBeCalledTimes(1);
+  expect(onEngaged).toBeCalledTimes(1);
 });
 
 it('when confirm = true, enables submit button when all fields are valid and checkbox checked', () => {

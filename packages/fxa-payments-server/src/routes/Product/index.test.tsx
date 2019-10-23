@@ -8,6 +8,7 @@ import {
   STRIPE_FIELDS,
   PLAN_ID,
   PLAN_NAME,
+  PRODUCT_NAME,
   PRODUCT_ID,
   PRODUCT_REDIRECT_URLS,
   MOCK_PLANS,
@@ -62,7 +63,7 @@ describe('routes/Product', () => {
   }: {
     productId?: string;
     planId?: string;
-    matchMedia: (query: string) => boolean;
+    matchMedia?: (query: string) => boolean;
     navigateToUrl?: (url: string) => void;
     accountActivated?: string;
     createToken?: jest.Mock<any, any>;
@@ -73,13 +74,19 @@ describe('routes/Product', () => {
           productId,
         },
       },
+      createSubscriptionMounted: () => {},
+      createSubscriptionEngaged: () => {},
     };
     const mockStripe = {
       createToken,
     };
     const appContextValue = {
       ...defaultAppContextValue(),
-      matchMedia: matchMedia || jest.fn(() => { return { matches: false } }),
+      matchMedia:
+        matchMedia ||
+        jest.fn(() => {
+          return { matches: false };
+        }),
       navigateToUrl: navigateToUrl || jest.fn(),
       queryParams: {
         plan: planId,
@@ -115,7 +122,9 @@ describe('routes/Product', () => {
     const apiMocks = initApiMocks(displayName);
     const { findByText, queryByText, queryByTestId } = render(<Subject />);
     await findByText("Let's set up your subscription");
-    expect(queryByText(`${PLAN_NAME} for $5.00 per month`)).toBeInTheDocument();
+    expect(
+      queryByText(`${PRODUCT_NAME} for $5.00 per month`)
+    ).toBeInTheDocument();
     expect(queryByTestId('account-activated')).not.toBeInTheDocument();
     expect(queryByTestId('profile-email')).toBeInTheDocument();
     if (displayName) {
@@ -135,7 +144,9 @@ describe('routes/Product', () => {
       <Subject planId={PLAN_ID} accountActivated="true" />
     );
     await findByText("Let's set up your subscription");
-    expect(queryByText(`${PLAN_NAME} for $5.00 per month`)).toBeInTheDocument();
+    expect(
+      queryByText(`${PRODUCT_NAME} for $5.00 per month`)
+    ).toBeInTheDocument();
     expect(queryByTestId('account-activated')).toBeInTheDocument();
     if (displayName) {
       expect(queryByTestId('activated-display-name')).toBeInTheDocument();
@@ -235,7 +246,9 @@ describe('routes/Product', () => {
     ];
 
     const navigateToUrl = jest.fn();
-    const matchMedia = jest.fn(() => { return { matches: false } });
+    const matchMedia = jest.fn(() => {
+      return { matches: false };
+    });
     const renderResult = render(
       <Subject {...{ matchMedia, navigateToUrl, createToken }} />
     );
@@ -277,7 +290,7 @@ describe('routes/Product', () => {
     await findByText('Your subscription is ready');
     expect(matchMedia).toBeCalledWith(SMALL_DEVICE_RULE);
     expect(createToken).toBeCalled();
-    expect(queryByText('Plan 12345')).toBeInTheDocument();
+    expect(queryByText('Firefox Tanooki Suit')).toBeInTheDocument();
     expect(
       queryByText("Click here if you're not automatically redirected")
     ).toBeInTheDocument();
@@ -302,7 +315,9 @@ describe('routes/Product', () => {
     ];
 
     const navigateToUrl = jest.fn();
-    const matchMedia = jest.fn(() => { return { matches: false } });
+    const matchMedia = jest.fn(() => {
+      return { matches: false };
+    });
     const createToken = jest
       .fn()
       .mockResolvedValue(VALID_CREATE_TOKEN_RESPONSE);
@@ -313,7 +328,7 @@ describe('routes/Product', () => {
 
     await findByText('Your subscription is ready');
     expect(createToken).not.toBeCalled();
-    expect(queryByText('Plan 12345')).toBeInTheDocument();
+    expect(queryByText('Firefox Tanooki Suit')).toBeInTheDocument();
     expect(
       queryByText("Click here if you're not automatically redirected")
     ).toBeInTheDocument();

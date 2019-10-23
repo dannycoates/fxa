@@ -14,9 +14,16 @@
 
 'use strict';
 
-const { GROUPS, initialize } = require('../../../fxa-shared/metrics/amplitude');
+const {
+  GROUPS,
+  initialize,
+  mapBrowser,
+  mapFormFactor,
+  mapLocation,
+  mapOs,
+} = require('../../../fxa-shared/metrics/amplitude');
 const logger = require('./logging/log')();
-const ua = require('./user-agent');
+const ua = require('../../../fxa-shared/metrics/user-agent');
 const config = require('./configuration');
 const { version: VERSION } = require('../../package.json');
 
@@ -70,6 +77,20 @@ const EVENTS = {
   'cached.signin.success': {
     group: GROUPS.login,
     event: 'complete',
+  },
+
+  // Signup code based metrics
+  'screen.confirm-signup-code': {
+    group: GROUPS.registration,
+    event: 'signup_code_view',
+  },
+  'flow.confirm-signup-code.engage': {
+    group: GROUPS.registration,
+    event: 'signup_code_engage',
+  },
+  'flow.confirm-signup-code.submit': {
+    group: GROUPS.registration,
+    event: 'signup_code_submit',
   },
 };
 
@@ -263,44 +284,4 @@ function pruneUnsetValues(data) {
   });
 
   return result;
-}
-
-function mapBrowser(userAgent) {
-  return mapUserAgentProperties(userAgent, 'ua', 'browser', 'browserVersion');
-}
-
-function mapOs(userAgent) {
-  return mapUserAgentProperties(userAgent, 'os', 'os', 'osVersion');
-}
-
-function mapUserAgentProperties(
-  userAgent,
-  key,
-  familyProperty,
-  versionProperty
-) {
-  const group = userAgent[key];
-  const { family } = group;
-  if (family && family !== 'Other') {
-    return {
-      [familyProperty]: family,
-      [versionProperty]: group.toVersionString(),
-    };
-  }
-}
-
-function mapFormFactor(userAgent) {
-  const { brand, family: formFactor } = userAgent.device;
-  if (brand && formFactor && brand !== 'Generic') {
-    return { formFactor };
-  }
-}
-
-function mapLocation(location) {
-  if (location && (location.country || location.state)) {
-    return {
-      country: location.country,
-      region: location.state,
-    };
-  }
 }

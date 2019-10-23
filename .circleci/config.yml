@@ -114,7 +114,7 @@ jobs:
       - image: redis
       - image: memcached
       - image: pafortin/goaws
-      - image: circleci/mysql:5.7
+      - image: circleci/mysql:5.7.27
       - image: mozilla/fxa-email-service
         environment:
           NODE_ENV: dev
@@ -213,8 +213,7 @@ jobs:
           at: ~/
       - run: |
           . ../../.circleci/install-rust.sh
-          rustup component add rustfmt-preview
-          cargo fmt -- --check
+          rustup set profile minimal
           ./scripts/test_with_authdb.sh
           cargo install cargo-audit
           cargo audit

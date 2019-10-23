@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useEffect, useRef } from 'react';
 import {
   injectStripe,
   CardNumberElement,
@@ -26,9 +26,9 @@ import { AppContext } from '../../lib/AppContext';
 import './index.scss';
 import { Plan } from '../../store/types';
 
-export const SMALL_DEVICE_RULE = "(max-width: 520px)";
-export const SMALL_DEVICE_LINE_HEIGHT = "40px";
-export const DEFAULT_LINE_HEIGHT = "48px";
+export const SMALL_DEVICE_RULE = '(max-width: 520px)';
+export const SMALL_DEVICE_LINE_HEIGHT = '40px';
+export const DEFAULT_LINE_HEIGHT = '48px';
 
 // ref: https://stripe.com/docs/stripe-js/reference#the-elements-object
 let stripeElementStyles = {
@@ -40,6 +40,9 @@ let stripeElementStyles = {
     fontWeight: '500',
     lineHeight: '48px',
   },
+  invalid: {
+    color: '#0c0c0d',
+  },
 };
 
 type StripeElementStyles = {
@@ -49,9 +52,16 @@ type StripeElementStyles = {
   lineHeight: string;
 };
 
+type StripeElementDirectStyles = {
+  color: string;
+};
+
 export function checkMedia(
   matched: boolean,
-  stripeElementStyles: { base: StripeElementStyles }
+  stripeElementStyles: {
+    base: StripeElementStyles;
+    invalid: StripeElementDirectStyles;
+  }
 ) {
   let lh = matched ? SMALL_DEVICE_LINE_HEIGHT : DEFAULT_LINE_HEIGHT;
   return Object.assign(stripeElementStyles, { base: { lineHeight: lh } });
@@ -75,6 +85,8 @@ export type PaymentFormProps = {
   validatorInitialState?: ValidatorState;
   validatorMiddlewareReducer?: ValidatorMiddlewareReducer;
   stripe?: PaymentFormStripeProps;
+  onMounted: Function;
+  onEngaged: Function;
 };
 
 export const PaymentForm = ({
@@ -87,6 +99,8 @@ export const PaymentForm = ({
   validatorInitialState,
   validatorMiddlewareReducer,
   stripe,
+  onMounted,
+  onEngaged,
 }: PaymentFormProps) => {
   const validator = useValidatorState({
     initialState: validatorInitialState,
@@ -94,6 +108,19 @@ export const PaymentForm = ({
   });
 
   const { matchMedia } = useContext(AppContext);
+
+  useEffect(() => {
+    onMounted(plan);
+  }, [onMounted, plan]);
+
+  const engaged = useRef(false);
+
+  const engage = useCallback(() => {
+    if (!engaged.current) {
+      onEngaged(plan);
+      engaged.current = true;
+    }
+  }, [engaged, onEngaged, plan]);
 
   const onSubmit = useCallback(
     ev => {
@@ -105,16 +132,21 @@ export const PaymentForm = ({
       if (stripe) {
         stripe
           .createToken({ name, address_zip: zip })
-          .then((tokenResponse: stripe.TokenResponse) =>
-            onPayment(tokenResponse, name)
-          )
-          .catch(onPaymentError);
+          .then((tokenResponse: stripe.TokenResponse) => {
+            onPayment(tokenResponse, name);
+          })
+          .catch(err => {
+            onPaymentError(err);
+          });
       }
     },
     [validator, onPayment, onPaymentError, stripe]
   );
 
-  stripeElementStyles = checkMedia(matchMedia(SMALL_DEVICE_RULE), stripeElementStyles);
+  stripeElementStyles = checkMedia(
+    matchMedia(SMALL_DEVICE_RULE),
+    stripeElementStyles
+  );
 
   return (
     <Form
@@ -122,6 +154,7 @@ export const PaymentForm = ({
       validator={validator}
       onSubmit={onSubmit}
       className="payment"
+      onChange={engage}
     >
       <Input
         type="text"
@@ -132,12 +165,16 @@ export const PaymentForm = ({
         required
         autoFocus
         spellCheck={false}
-        onValidate={value => {
-          let error = null;
+        onValidate={(value, focused) => {
+          let valid = true;
           if (value !== null && !value) {
-            error = 'Please enter your name';
+            valid = false;
           }
-          return { value, error };
+          return {
+            value,
+            valid,
+            error: !valid && !focused ? 'Please enter your name' : null,
+          };
         }}
       />
 
@@ -176,32 +213,35 @@ export const PaymentForm = ({
           required
           data-testid="zip"
           placeholder="12345"
-          onValidate={value => {
+          onValidate={(value, focused) => {
+            let valid = true;
             let error = null;
             value = ('' + value).substr(0, 5);
             if (!value) {
+              valid = false;
               error = 'Zip code is required';
             } else if (value.length !== 5) {
+              valid = false;
               error = 'Zip code is too short';
             }
-            return { value, error };
+            return {
+              value,
+              valid,
+              error: !focused ? error : null,
+            };
           }}
         />
       </FieldGroup>
 
       {confirm && plan && (
-        <Checkbox
-          data-testid="confirm"
-          name="confirm"
-          required
-          label={`
-          I authorize Mozilla, maker of Firefox products, to charge my
-          payment method $${formatCurrencyInCents(plan.amount)} per ${
-            plan.interval
-          }, according to payment
-          terms, until I cancel my subscription.
-        `}
-        />
+        <Checkbox data-testid="confirm" name="confirm" required>
+          I authorize Mozilla, maker of Firefox products, to charge my payment
+          method{' '}
+          <strong>
+            ${`${formatCurrencyInCents(plan.amount)} per ${plan.interval}`}
+          </strong>
+          , according to payment terms, until I cancel my subscription.
+        </Checkbox>
       )}
 
       {onCancel ? (
@@ -220,7 +260,9 @@ export const PaymentForm = ({
             disabled={inProgress}
           >
             {inProgress ? (
-              <span data-testid="spinner-update" className="spinner">&nbsp;</span>
+              <span data-testid="spinner-update" className="spinner">
+                &nbsp;
+              </span>
             ) : (
               <span>Update</span>
             )}
@@ -234,7 +276,9 @@ export const PaymentForm = ({
             disabled={inProgress}
           >
             {inProgress ? (
-              <span data-testid="spinner-submit" className="spinner">&nbsp;</span>
+              <span data-testid="spinner-submit" className="spinner">
+                &nbsp;
+              </span>
             ) : (
               <span>Submit</span>
             )}
@@ -244,7 +288,17 @@ export const PaymentForm = ({
 
       <div className="legal-blurb">
         <p>Mozilla uses Stripe for secure payment processing.</p>
-        <p>View the <a href="https://stripe.com/privacy">Stripe privacy policy</a>.</p>
+        <p>
+          View the{' '}
+          <a
+            href="https://stripe.com/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Stripe privacy policy
+          </a>
+          .
+        </p>
       </div>
     </Form>
   );

@@ -92,8 +92,9 @@ const MockStripeElement = ({ testid }: { testid: string }) =>
       super(props);
 
       // Stash this element's onChange handler in module-global registry.
-      const { onChange } = props;
+      const { onChange, onBlur } = props;
       mockStripeElementOnChangeFns[testid] = onChange as onChangeFunctionType;
+      mockStripeElementOnBlurFns[testid] = onBlur as onBlurFunctionType;
 
       // Real react-stripe-elements stash a ref to their container in
       // this._ref, which we use for tooltip positioning
@@ -118,6 +119,14 @@ type onChangeFunctionType = (
 
 export const mockStripeElementOnChangeFns: {
   [name: string]: onChangeFunctionType;
+} = {};
+
+type onBlurFunctionType = (
+  value: stripe.elements.ElementChangeResponse
+) => void;
+
+export const mockStripeElementOnBlurFns: {
+  [name: string]: onBlurFunctionType;
 } = {};
 
 export type MockStripeType = {
@@ -168,7 +177,7 @@ export const elementChangeResponse = ({
   brand: 'test',
   value: 'boof',
   complete,
-  empty: !!value,
+  empty: !value,
   error:
     (!!errorMessage && {
       type: 'card_error',
@@ -180,7 +189,11 @@ export const elementChangeResponse = ({
 
 export const defaultAppContextValue = (): AppContextType => ({
   config,
-  queryParams: {},
+  queryParams: {
+    device_id: 'quux',
+    flow_begin_time: Date.now(),
+    flow_id: 'thisisanid',
+  },
   matchMedia: jest.fn().mockImplementation(query => false),
   navigateToUrl: jest.fn(),
   getScreenInfo: () => new ScreenInfo(window),
@@ -231,9 +244,11 @@ export const STRIPE_FIELDS = [
 
 export const PLAN_ID = 'plan_12345';
 
-export const PLAN_NAME = 'Plan 12345';
+export const PLAN_NAME = 'Plan 12345 monthly';
 
 export const PRODUCT_ID = 'product_8675309';
+
+export const PRODUCT_NAME = 'Firefox Tanooki Suit';
 
 export const PRODUCT_REDIRECT_URLS = {
   [PRODUCT_ID]: 'https://example.com/product',
@@ -244,7 +259,7 @@ export const MOCK_PLANS = [
     plan_id: PLAN_ID,
     plan_name: PLAN_NAME,
     product_id: PRODUCT_ID,
-    product_name: 'Product 67890',
+    product_name: PRODUCT_NAME,
     interval: 'month',
     amount: '500',
     currency: 'usd',

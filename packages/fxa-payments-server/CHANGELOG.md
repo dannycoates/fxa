@@ -1,5 +1,87 @@
 # Change history
 
+## 1.148.8
+
+### Bug fixes
+
+- deps: Update deps and add exception for advisory 1184 (f4d7e9855)
+
+## 1.148.7
+
+No changes.
+
+## 1.148.6
+
+No changes.
+
+## 1.148.5
+
+### Bug fixes
+
+- payments: restore WORKDIR to /app after metrics (19cf97e1b)
+- payments: fix lint for no-unused-vars (557e6d6b8)
+
+## 1.148.4
+
+### New features
+
+- routes: Provide the same routing API as the content server (a6a46802e)
+- payments: complete post-metrics endpoint (f7998ad02)
+- metrics: add endpoint for emitting amplitude metrics (74355e2f5)
+- metrics: add Amplitude metrics to payments pages (01c890933)
+
+### Bug fixes
+
+- payments: Get post-metrics route working and add tests (aa244aaaf)
+- payments-server: use refs to track metric state (d33972166)
+- styles: match subscription styles to fxa settings (89b8ee401)
+
+### Other changes
+
+- images: inline fpn svg to reduce requests (088e6db64)
+
+## 1.148.3
+
+No changes.
+
+## 1.148.2
+
+### Bug fixes
+
+- images: add viewBox to fpn svg (ba0fe6c95)
+
+### Other changes
+
+- release: Merge branch 'train-147' into train-148-merge-147 (66e170d45)
+
+## 1.148.1
+
+### Other changes
+
+- strings: fix typo in subscription settings (e079be703)
+
+## 1.148.0
+
+### Bug fixes
+
+- payments: add config to disable HSTS to avoid multiple headers in production (40ebee8a4)
+- payments: only show zip input error onBlur (7b5907d34)
+
+### Refactorings
+
+- payments: Better organize Redux modules and API calls, remove cruft, fix console warnings (1e035bc72)
+
+### Other changes
+
+- style: add icon to subscription success page (af0e41e17)
+- styles: mitigate loading jank on payments server (48ca59611)
+- styles: fix very small style nit on payments header (79259aca0)
+- styles: tidy up payment server styles (cabdec38c)
+
+## 1.147.5
+
+No changes.
+
 ## 1.147.4
 
 No changes.
