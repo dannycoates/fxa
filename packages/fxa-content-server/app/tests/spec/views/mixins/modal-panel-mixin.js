@@ -10,14 +10,6 @@ import ModalPanelMixin from 'views/mixins/modal-panel-mixin';
 import Notifier from 'lib/channels/notifier';
 import sinon from 'sinon';
 import TestTemplate from 'templates/test_template.mustache';
-import KeyCodes from 'lib/key-codes';
-
-function _createEvent(keyCode) {
-  var keyEvent = $.Event('keydown');
-  keyEvent.which = keyCode;
-
-  return keyEvent;
-}
 
 const ModalPanelView = BaseView.extend({
   template: TestTemplate,
@@ -56,21 +48,6 @@ describe('views/mixins/modal-panel-mixin', () => {
       assert.isFalse($.modal.isActive());
       assert.equal($('body').css('min-height'), '0px');
     });
-  });
-
-  describe('is keyboard accessible', () => {
-    it('changes focus to the modal and tabs forward', () => {
-      sinon.spy(view, 'openPanel');
-      $('.modal').trigger(_createEvent(KeyCodes.TAB));
-      // does not work - body has focus
-      assert.isTrue(
-        document.activeElement === $('[data-href="settings/display_name"]')
-      );
-    });
-
-    // it('changes focus to the modal and tabs backwards', () => {});
-
-    // it('selects radio button on "enter" keypress when radio is focused', () => {});
   });
 
   it('closePanel destroys the view', () => {

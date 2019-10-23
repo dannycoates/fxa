@@ -48,7 +48,7 @@ export default {
     modal.focus();
 
     const focusableElementsNodeList = modal.querySelectorAll(
-      'a[href] button, input[type="radio"]'
+      'a[href], button, input[type="radio"]'
     );
     const focusableElements = Array.prototype.slice.call(
       focusableElementsNodeList
