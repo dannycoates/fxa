@@ -3,8 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 'use strict';
+import keys from '@theintern/leadfoot/keys';
+const pressKeys = require('@theintern/leadfoot/helpers/pressKeys').default;
 
 const { registerSuite } = intern.getInterface('object');
+const assert = intern.getPlugin('chai').assert;
 const path = require('path');
 const TestHelpers = require('../lib/helpers');
 const FunctionalHelpers = require('./lib/helpers');
@@ -70,6 +73,20 @@ registerSuite('settings/avatar', {
           // success is going to the change avatar page
           .then(testElementExists(selectors.SETTINGS_AVATAR.CHANGE_HEADER))
       );
+    },
+
+    'attempt to navigate by tabbing': function() {
+      return this.remote
+        .then(openPage(AVATAR_CHANGE_URL_AUTOMATED, '#camera'))
+        .then(pressKeys(keys.TAB))
+        .getActiveElement()
+        .then(function(element) {
+          // first element is focused
+          element.getAttribute('id').then(function(id) {
+            assert.isTrue(id.is('file'));
+          });
+        })
+        .end();
     },
 
     'go to settings with an email selected to see change link then click on avatar to change': function() {
