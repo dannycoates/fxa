@@ -229,6 +229,20 @@ module.exports = {
     SIGNOUT: '#signout',
     SUCCESS: '.settings-success',
   },
+  SETTINGS_AVATAR: {
+    AVATAR: '.change-avatar > img',
+    BACK: '.modal-panel #back',
+    BUTTON_CAMERA: '#camera',
+    BUTTON_ROTATE: '.rotate',
+    BUTTON_ZOOM_IN: '.zoom-in',
+    BUTTON_ZOOM_OUT: '.zoom-out',
+    CAMERA_HEADER: '#avatar-camera',
+    CHANGE_HEADER: '#avatar-options',
+    CROPPER_HEADER: '.cropper',
+    MENU_BUTTON: '#change-avatar .settings-unit-toggle',
+    SUBMIT: '.modal-panel #submit-btn',
+    UPLOAD_FILENAME_INPUT: '#imageLoader',
+  },
   SETTINGS_CLIENTS: {
     BUTTON_REFRESH: '.clients-refresh',
     BUTTON_REFRESH_LOADING: '.clients-refresh .spinner',
@@ -240,6 +254,7 @@ module.exports = {
     BUTTON_MANAGE: '.open-email-preferences',
   },
   SETTINGS_DELETE_ACCOUNT: {
+    CANCEL: '#delete-account .cancel',
     DETAILS: '#delete-account .settings-unit-details',
     MENU_BUTTON: '#delete-account .settings-unit-toggle',
     CHECKBOXES: '#delete-account .delete-account-checkbox',
