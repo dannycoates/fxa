@@ -191,6 +191,10 @@ const testElementExists = thenify(function(selector) {
   return this.parent.findByCssSelector(selector).end();
 });
 
+const pressKeys = thenify(function(key) {
+  return this.parent.pressKeys([key]).end();
+});
+
 /**
  * Click an element defined by `selector`, wait for an optional `readySelector`
  * to be displayed.
@@ -2532,6 +2536,7 @@ module.exports = {
   pollUntil,
   pollUntilGoneByQSA,
   pollUntilHiddenByQSA,
+  pressKeys,
   respondToWebChannelMessage,
   storeWebChannelMessageData,
   subscribeToTestProduct,

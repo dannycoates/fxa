@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 'use strict';
-import keys from '@theintern/leadfoot/keys';
-const pressKeys = require('@theintern/leadfoot/helpers/pressKeys').default;
+const keys = require('@theintern/leadfoot/keys').default;
 
 const { registerSuite } = intern.getInterface('object');
 const assert = intern.getPlugin('chai').assert;
@@ -46,6 +45,7 @@ const {
   pollUntilHiddenByQSA,
   testElementExists,
   testIsBrowserNotified,
+  pressKeys,
 } = FunctionalHelpers;
 
 registerSuite('settings/avatar', {
@@ -81,9 +81,9 @@ registerSuite('settings/avatar', {
         .then(pressKeys(keys.TAB))
         .getActiveElement()
         .then(function(element) {
-          // first element is focused
           element.getAttribute('id').then(function(id) {
-            assert.isTrue(id.is('file'));
+            // fails
+            assert.equal(id, 'file');
           });
         })
         .end();
