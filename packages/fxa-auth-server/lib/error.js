@@ -201,7 +201,7 @@ AppError.prototype.backtrace = function(traced) {
 /**
   Translates an error from Hapi format to our format
 */
-AppError.translate = function(request, response) {
+AppError.translate = (request, response) => {
   let error;
   if (response instanceof AppError) {
     return response;
@@ -268,7 +268,7 @@ AppError.translate = function(request, response) {
 
 // Helper functions for creating particular response types.
 
-AppError.dbIncorrectPatchLevel = function(level, levelRequired) {
+AppError.dbIncorrectPatchLevel = (level, levelRequired) => {
   return new AppError(
     {
       code: 400,
@@ -283,7 +283,7 @@ AppError.dbIncorrectPatchLevel = function(level, levelRequired) {
   );
 };
 
-AppError.accountExists = function(email) {
+AppError.accountExists = email => {
   return new AppError(
     {
       code: 400,
@@ -297,7 +297,7 @@ AppError.accountExists = function(email) {
   );
 };
 
-AppError.unknownAccount = function(email) {
+AppError.unknownAccount = email => {
   return new AppError(
     {
       code: 400,
@@ -311,7 +311,7 @@ AppError.unknownAccount = function(email) {
   );
 };
 
-AppError.incorrectPassword = function(dbEmail, requestEmail) {
+AppError.incorrectPassword = (dbEmail, requestEmail) => {
   if (dbEmail !== requestEmail) {
     return new AppError(
       {
@@ -338,7 +338,7 @@ AppError.incorrectPassword = function(dbEmail, requestEmail) {
   );
 };
 
-AppError.unverifiedAccount = function() {
+AppError.unverifiedAccount = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -347,7 +347,7 @@ AppError.unverifiedAccount = function() {
   });
 };
 
-AppError.invalidVerificationCode = function(details) {
+AppError.invalidVerificationCode = details => {
   return new AppError(
     {
       code: 400,
@@ -359,7 +359,7 @@ AppError.invalidVerificationCode = function(details) {
   );
 };
 
-AppError.invalidRequestBody = function() {
+AppError.invalidRequestBody = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -368,7 +368,7 @@ AppError.invalidRequestBody = function() {
   });
 };
 
-AppError.invalidRequestParameter = function(validation) {
+AppError.invalidRequestParameter = validation => {
   return new AppError(
     {
       code: 400,
@@ -382,7 +382,7 @@ AppError.invalidRequestParameter = function(validation) {
   );
 };
 
-AppError.missingRequestParameter = function(param) {
+AppError.missingRequestParameter = param => {
   return new AppError(
     {
       code: 400,
@@ -396,7 +396,7 @@ AppError.missingRequestParameter = function(param) {
   );
 };
 
-AppError.invalidSignature = function(message) {
+AppError.invalidSignature = message => {
   return new AppError({
     code: 401,
     error: 'Unauthorized',
@@ -405,7 +405,7 @@ AppError.invalidSignature = function(message) {
   });
 };
 
-AppError.invalidToken = function(message) {
+AppError.invalidToken = message => {
   return new AppError({
     code: 401,
     error: 'Unauthorized',
@@ -414,7 +414,7 @@ AppError.invalidToken = function(message) {
   });
 };
 
-AppError.invalidTimestamp = function() {
+AppError.invalidTimestamp = () => {
   return new AppError(
     {
       code: 401,
@@ -428,7 +428,7 @@ AppError.invalidTimestamp = function() {
   );
 };
 
-AppError.invalidNonce = function() {
+AppError.invalidNonce = () => {
   return new AppError({
     code: 401,
     error: 'Unauthorized',
@@ -437,7 +437,7 @@ AppError.invalidNonce = function() {
   });
 };
 
-AppError.missingContentLength = function() {
+AppError.missingContentLength = () => {
   return new AppError({
     code: 411,
     error: 'Length Required',
@@ -446,7 +446,7 @@ AppError.missingContentLength = function() {
   });
 };
 
-AppError.requestBodyTooLarge = function() {
+AppError.requestBodyTooLarge = () => {
   return new AppError({
     code: 413,
     error: 'Request Entity Too Large',
@@ -455,11 +455,7 @@ AppError.requestBodyTooLarge = function() {
   });
 };
 
-AppError.tooManyRequests = function(
-  retryAfter,
-  retryAfterLocalized,
-  canUnblock
-) {
+AppError.tooManyRequests = (retryAfter, retryAfterLocalized, canUnblock) => {
   if (!retryAfter) {
     retryAfter = 30;
   }
@@ -491,7 +487,7 @@ AppError.tooManyRequests = function(
   );
 };
 
-AppError.requestBlocked = function(canUnblock) {
+AppError.requestBlocked = canUnblock => {
   let extra;
   if (canUnblock) {
     extra = {
@@ -510,7 +506,7 @@ AppError.requestBlocked = function(canUnblock) {
   );
 };
 
-AppError.serviceUnavailable = function(retryAfter) {
+AppError.serviceUnavailable = retryAfter => {
   if (!retryAfter) {
     retryAfter = 30;
   }
@@ -530,7 +526,7 @@ AppError.serviceUnavailable = function(retryAfter) {
   );
 };
 
-AppError.featureNotEnabled = function(retryAfter) {
+AppError.featureNotEnabled = retryAfter => {
   if (!retryAfter) {
     retryAfter = 30;
   }
@@ -550,7 +546,7 @@ AppError.featureNotEnabled = function(retryAfter) {
   );
 };
 
-AppError.gone = function() {
+AppError.gone = () => {
   return new AppError({
     code: 410,
     error: 'Gone',
@@ -559,7 +555,7 @@ AppError.gone = function() {
   });
 };
 
-AppError.mustResetAccount = function(email) {
+AppError.mustResetAccount = email => {
   return new AppError(
     {
       code: 400,
@@ -573,7 +569,7 @@ AppError.mustResetAccount = function(email) {
   );
 };
 
-AppError.unknownDevice = function() {
+AppError.unknownDevice = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -582,7 +578,7 @@ AppError.unknownDevice = function() {
   });
 };
 
-AppError.deviceSessionConflict = function(deviceId) {
+AppError.deviceSessionConflict = deviceId => {
   return new AppError(
     {
       code: 400,
@@ -594,7 +590,7 @@ AppError.deviceSessionConflict = function(deviceId) {
   );
 };
 
-AppError.invalidUnblockCode = function() {
+AppError.invalidUnblockCode = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -710,7 +706,7 @@ AppError.cannotDeletePrimaryEmail = () => {
   });
 };
 
-AppError.unverifiedSession = function() {
+AppError.unverifiedSession = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -785,7 +781,7 @@ AppError.cannotResetPasswordWithSecondaryEmail = () => {
   });
 };
 
-AppError.invalidSigninCode = function() {
+AppError.invalidSigninCode = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -794,7 +790,7 @@ AppError.invalidSigninCode = function() {
   });
 };
 
-AppError.cannotChangeEmailToUnverifiedEmail = function() {
+AppError.cannotChangeEmailToUnverifiedEmail = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -803,7 +799,7 @@ AppError.cannotChangeEmailToUnverifiedEmail = function() {
   });
 };
 
-AppError.cannotChangeEmailToUnownedEmail = function() {
+AppError.cannotChangeEmailToUnownedEmail = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -813,7 +809,7 @@ AppError.cannotChangeEmailToUnownedEmail = function() {
   });
 };
 
-AppError.cannotLoginWithEmail = function() {
+AppError.cannotLoginWithEmail = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -822,7 +818,7 @@ AppError.cannotLoginWithEmail = function() {
   });
 };
 
-AppError.cannotResendEmailCodeToUnownedEmail = function() {
+AppError.cannotResendEmailCodeToUnownedEmail = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -832,7 +828,7 @@ AppError.cannotResendEmailCodeToUnownedEmail = function() {
   });
 };
 
-AppError.cannotSendEmail = function(isNewAddress) {
+AppError.cannotSendEmail = isNewAddress => {
   if (!isNewAddress) {
     return new AppError({
       code: 500,
@@ -849,7 +845,7 @@ AppError.cannotSendEmail = function(isNewAddress) {
   });
 };
 
-AppError.invalidTokenVerficationCode = function(details) {
+AppError.invalidTokenVerficationCode = details => {
   return new AppError(
     {
       code: 400,
@@ -861,7 +857,7 @@ AppError.invalidTokenVerficationCode = function(details) {
   );
 };
 
-AppError.expiredTokenVerficationCode = function(details) {
+AppError.expiredTokenVerficationCode = details => {
   return new AppError(
     {
       code: 400,
@@ -988,7 +984,7 @@ AppError.staleAuthAt = authAt => {
   );
 };
 
-AppError.notPublicClient = function notPublicClient() {
+AppError.notPublicClient = () => {
   return new AppError({
     code: 400,
     error: 'Bad Request',
@@ -1246,7 +1242,9 @@ AppError.backendServiceFailure = (service, operation, extra, error) => {
     {
       service,
       operation,
-    }
+    },
+    {},
+    error
   );
 };
 
@@ -1271,7 +1269,7 @@ AppError.disabledClientId = (clientId, retryAfter) => {
   );
 };
 
-AppError.internalValidationError = (op, data) => {
+AppError.internalValidationError = (op, data, error) => {
   return new AppError(
     {
       code: 500,
@@ -1282,7 +1280,9 @@ AppError.internalValidationError = (op, data) => {
     {
       op,
       data,
-    }
+    },
+    {},
+    error
   );
 };
 
@@ -1291,9 +1291,6 @@ AppError.unexpectedError = request => {
   decorateErrorWithRequest(error, request);
   return error;
 };
-
-module.exports = AppError;
-module.exports.ERRNO = ERRNO;
 
 function decorateErrorWithRequest(error, request) {
   if (request) {
@@ -1330,3 +1327,6 @@ function scrubHeaders(headers) {
   delete scrubbed['x-forwarded-for'];
   return scrubbed;
 }
+
+module.exports = AppError;
+module.exports.ERRNO = ERRNO;

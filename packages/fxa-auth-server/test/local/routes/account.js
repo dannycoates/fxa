@@ -554,7 +554,7 @@ describe('/account/create', () => {
         wrapWrapKb: 'wibble',
       },
       {
-        emailRecord: new error.unknownAccount(),
+        emailRecord: error.unknownAccount(),
       }
     );
     const mockMailer = mocks.mockMailer();
@@ -2356,8 +2356,8 @@ describe('/account/login', () => {
           });
 
           it('unknown account', () => {
-            mockDB.accountRecord = () => P.reject(new error.unknownAccount());
-            mockDB.emailRecord = () => P.reject(new error.unknownAccount());
+            mockDB.accountRecord = () => P.reject(error.unknownAccount());
+            mockDB.emailRecord = () => P.reject(error.unknownAccount());
             return runTest(route, mockRequestWithUnblockCode).then(
               () => assert(false),
               err => {

@@ -244,7 +244,7 @@ module.exports = (
           config.oauth.deviceCommandsEnabled === false &&
           credentials.refreshTokenId
         ) {
-          throw new error.featureNotEnabled();
+          throw error.featureNotEnabled();
         }
 
         const response = await pushbox.retrieve(uid, deviceId, limit, index);
@@ -289,7 +289,7 @@ module.exports = (
           config.oauth.deviceCommandsEnabled === false &&
           credentials.refreshTokenId
         ) {
-          throw new error.featureNotEnabled();
+          throw error.featureNotEnabled();
         }
 
         const [, device] = await Promise.all([
@@ -541,7 +541,7 @@ module.exports = (
           config.oauth.deviceCommandsEnabled === false &&
           credentials.refreshTokenId
         ) {
-          throw new error.featureNotEnabled();
+          throw error.featureNotEnabled();
         }
 
         const deviceArray = await request.app.devices;

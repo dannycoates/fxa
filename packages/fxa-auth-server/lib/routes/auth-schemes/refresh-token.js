@@ -23,13 +23,13 @@ module.exports = function schemeRefreshTokenScheme(config, db, oauthdb) {
     return {
       async authenticate(request, h) {
         if (config.oauth.deviceAccessEnabled === false) {
-          throw new AppError.featureNotEnabled();
+          throw AppError.featureNotEnabled();
         }
 
         const bearerMatch = BEARER_AUTH_REGEX.exec(
           request.headers.authorization
         );
-        const bearerMatchErr = new AppError.invalidRequestParameter(
+        const bearerMatchErr = AppError.invalidRequestParameter(
           'authorization'
         );
         const refreshToken = bearerMatch && bearerMatch[1];
@@ -41,7 +41,7 @@ module.exports = function schemeRefreshTokenScheme(config, db, oauthdb) {
 
         const refreshTokenInfo = await oauthdb.checkRefreshToken(refreshToken);
         if (!refreshTokenInfo || !refreshTokenInfo.active) {
-          return h.unauthenticated(new AppError.invalidToken());
+          return h.unauthenticated(AppError.invalidToken());
         }
 
         const credentials = {
