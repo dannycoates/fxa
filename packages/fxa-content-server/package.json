@@ -3,7 +3,7 @@
     "version": "1.149.2",
     "description": "Firefox Accounts Content Server",
     "scripts": {
-        "build-production": "NODE_ENV=production grunt build",
+        "build": "NODE_ENV=production grunt build",
         "postinstall": "cp server/config/local.json-dist server/config/local.json && scripts/download_l10n.sh",
         "lint": "eslint app server tests --cache",
         "lint:deps": "npm audit --json | audit-filter --nsp-config=.nsprc --audit=-",

@@ -1,0 +1,18 @@
+.circleci
+.vscode
+.git
+**/docs
+**/node_modules
+#**/test
+**/tests
+**/.nyc_output
+**/fxa-content-server-l10n
+packages/123done
+packages/fortress
+packages/fxa-dev-launcher
+packages/fxa-circleci
+#TODO unexclude email-service
+packages/fxa-email-service
+packages/fxa-email-service/target
+packages/fxa-content-server/dist
+packages/fxa-geodb/db
