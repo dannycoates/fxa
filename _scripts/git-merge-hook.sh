@@ -1,5 +1,7 @@
 #!/bin/bash
 
+git submodule update --init --recursive
+
 if [[ "$FXA_AUTO_INSTALL" == 0 ]] || git diff --quiet ORIG_HEAD HEAD yarn.lock; then
   exit 0
 elif [[ "$FXA_AUTO_INSTALL" == 1 ]]; then

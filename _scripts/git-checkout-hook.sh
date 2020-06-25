@@ -1,5 +1,7 @@
 #!/bin/bash
 
+git submodule update --init --recursive
+
 IFS=' '
 read -ra G_PARAMS <<< "$HUSKY_GIT_PARAMS"
 PREV=${G_PARAMS[0]}
